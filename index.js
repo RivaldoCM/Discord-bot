@@ -1,21 +1,30 @@
-// Require the necessary discord.js classes
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
-const { token } = require('./config.json');
-const fs = require('node:fs');
+const { Client, GatewayIntentBits, Partials, Collection } = require('discord.js');
 
-// Create a new client instance
-const client = new Client({ 
-	intents: [
-		GatewayIntentBits.Guilds,
-		GatewayIntentBits.GuildMessages,
-	],
+const { Guilds, GuildMembers, GuildMessages } = GatewayIntentBits;
+const { User, Message, GuildMember, ThreadMember } = Partials;
+
+
+const { loadCommands } = require("./src/handlers/commandHandler");
+const { loadEvents } = require("./src/handlers/eventHandler");
+
+const client = new Client({
+    intents: [Guilds, GuildMembers, GuildMessages],
+    partials: [User, Message, GuildMember, ThreadMember],
 });
 
 client.commands = new Collection();
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+client.config = require('./src/config.json');
+
+client.login(client.config.token).then(() => {
+    loadEvents(client);
+    loadCommands(client);
+});
+
+/*
+const commandFiles = fs.readdirSync('./src/commands').filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
-    const command = require(`./commands/${file}`);
+    const command = require(`./src/commands/${file}`);
 
     client.commands.set(command.data.name, command);
 }
@@ -38,5 +47,4 @@ client.on('interactionCreate', async interaction => {
         await interaction.reply({ content: 'deu ruim', ephemeral: true });
     }
 });
-
-client.login(token);
+*/
